@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAPTCHA Generator</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #fff;
+    margin: 0;
+    padding: 0;
+  }
+  .container {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-direction: row;
+    height: 100vh;
+    padding: 20px;
+  }
+  #captchaCanvas {
+    border: 1px solid #ccc;
+    background-color: lightblue; /* Light blue background color */
+    color: #fff; /* White text color */
+    font-weight: bold;
+    font-size: 55px; /* Increased font size */
+    text-align: center; /* Center text horizontally */
+    margin-right: 20px;
+  }
+  #fontSelector {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    margin-right: 20px;
+    width: 200px; /* Increase width */
+    height: 300px; /* Increase height */
+  }
+  #filenameContainer {
+    margin-top: 20px;
+  }
+  #filename {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 10px;
+  }
+  button {
+    padding: 10px 20px;
+    background-color: #fff;
+    color: #000;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div>
+    <canvas id="captchaCanvas" width="300" height="100"></canvas>
+    <select id="fontList" size="12" style="width: 200px; height: 300px; margin-top: 20px;">
+      <!-- Font options here -->
+      <option value="Arial">Arial</option>
+      <option value="Times New Roman">Times New Roman</option>
+      <option value="Verdana">Verdana</option>
+      <option value="Georgia">Georgia</option>
+      <option value="Courier New">Courier New</option>
+      <option value="Impact">Impact</option>
+      <option value="Comic Sans MS">Comic Sans MS</option>
+      <option value="Trebuchet MS">Trebuchet MS</option>
+      <option value="Lucida Console">Lucida Console</option>
+      <option value="Palatino Linotype">Palatino Linotype</option>
+      <option value="Arial Black">Arial Black</option>
+      <option value="Century Gothic">Century Gothic</option>
+      <option value="Garamond">Garamond</option>
+      <option value="Book Antiqua">Book Antiqua</option>
+      <option value="Arial Narrow">Arial Narrow</option>
+      <option value="Century Schoolbook">Century Schoolbook</option>
+      <option value="Franklin Gothic Medium">Franklin Gothic Medium</option>
+      <option value="Copperplate">Copperplate</option>
+      <option value="Brush Script MT">Brush Script MT</option>
+      <option value="Cambria">Cambria</option>
+      <option value="Constantia">Constantia</option>
+      <option value="Perpetua">Perpetua</option>
+      <option value="Rockwell">Rockwell</option>
+      <option value="Tahoma">Tahoma</option>
+      <option value="Tw Cen MT">Tw Cen MT</option>
+      <option value="Segoe UI">Segoe UI</option>
+      <option value="Calibri">Calibri</option>
+    </select>
+    <div id="filenameContainer">
+      <input type="text" id="filename" placeholder="Enter filename">
+      <button onclick="saveCaptcha()">Go</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var currentCaptchaText; // Variable to store the current CAPTCHA text
+
+function generateCaptcha(captchaText) {
+  var canvas = document.getElementById('captchaCanvas');
+  var context = canvas.getContext('2d');
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Draw background noise
+  for (var i = 0; i < 9000; i++) { // Increased noise to 10000
+    var x = Math.random() * canvas.width;
+    var y = Math.random() * canvas.height;
+    context.fillStyle = getRandomColor();
+    context.fillRect(x, y, 1, 1); // Reduced size of noise dots
+  }
+  
+  var fontSize = 36; /* Increased font size */
+  context.font = fontSize + 'px ' + getSelectedFont();
+  context.textBaseline = 'middle'; /* Center text vertically */
+  
+  // Calculate the total width of the text
+  var textWidth = captchaText.length * (fontSize + 5); // Adjust spacing between letters
+  
+  // Calculate the starting position to center the text horizontally
+  var xPosition = (canvas.width - textWidth) / 2;
+  var yPosition = canvas.height / 2;
+  
+  // Draw each letter with a different color
+  for (var i = 0; i < captchaText.length; i++) {
+    var letter = captchaText[i];
+    context.fillStyle = getRandomColor();
+    context.fillText(letter, xPosition, yPosition);
+    xPosition += context.measureText(letter).width + 5; // Adjust spacing between letters
+  }
+  
+  currentCaptchaText = captchaText; // Store the current CAPTCHA text
+}
+
+function saveCaptcha() {
+  var canvas = document.getElementById('captchaCanvas');
+  var filename = document.getElementById('filename').value;
+  if (!filename) {
+    alert('Please enter a filename.');
+    return;
+  }
+  
+  var dataURL = canvas.toDataURL('image/jpeg');
+  var link = document.createElement('a');
+  link.href = dataURL;
+  link.download = filename + '.jpg';
+  link.click();
+  
+  var blob = new Blob([currentCaptchaText], {type: 'text/plain'}); // Use stored CAPTCHA text
+  var textFile = window.URL.createObjectURL(blob);
+  link.href = textFile;
+  link.download = filename + '.txt';
+  link.click();
+}
+
+
+function generateRandomText() {
+  var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+  var length = 6;
+  var result = '';
+  for (var i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+function getSelectedFont() {
+  var fontList = document.getElementById('fontList');
+  return fontList.options[fontList.selectedIndex].value;
+}
+
+function saveCaptcha() {
+  var canvas = document.getElementById('captchaCanvas');
+  var filename = document.getElementById('filename').value;
+  if (!filename) {
+    alert('Please enter a filename.');
+    return;
+  }
+  
+  var captchaText = generateRandomText(); // Generate CAPTCHA text
+  
+  generateCaptcha(captchaText); // Generate the CAPTCHA
+  
+  var dataURL = canvas.toDataURL('image/jpeg');
+  var link = document.createElement('a');
+  link.href = dataURL;
+  link.download = filename + '.jpg';
+  link.click();
+  
+  var blob = new Blob([captchaText], {type: 'text/plain'});
+  var textFile = window.URL.createObjectURL(blob);
+  link.href = textFile;
+  link.download = filename + '.txt';
+  link.click();
+}
+function getRandomColor() {
+  var letters = '0123456789ABCDEF';
+  var color = '#';
+  for (var i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
+</script>
+</body>
+</html>
